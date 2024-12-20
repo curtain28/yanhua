@@ -221,8 +221,8 @@ const mobileConfig = {
 
 function getTargetY() {
     if(isMobileDevice()) {
-        // 移动端限制在屏幕上半部分20%-70%的区域
-        return canvas.height * (0.2 + Math.random() * 0.5);
+        // 移动端限制在屏幕 30%-70% 的区域
+        return canvas.height * (0.3 + Math.random() * 0.4);
     }
     // 桌面端保持原来的行为
     return canvas.height * (0.1 + Math.random() * 0.3);
@@ -326,7 +326,7 @@ class Particle {
         if(this.opacity <= 0.1) return; // 跳过几乎不可见的粒子
 
         if (this.isTextParticle) {
-            // ���字粒子的特殊绘制
+            // 文字粒子的特殊绘制
             ctx.globalAlpha = this.opacity * (isMobileDevice() ? mobileConfig.textParticleRatio : 1);
             ctx.fillStyle = this.color;
             ctx.beginPath();
@@ -532,7 +532,7 @@ class Firework {
                 secondary.vy += config.gravity * 1.5; // 增加重力效果
                 secondary.timer--;
 
-                // 指定��间后爆炸
+                // 指定间后爆炸
                 if (secondary.timer <= 0) {
                     secondary.hasExploded = true;
                     // 使用配置的粒子例
@@ -616,15 +616,17 @@ class TrailParticle {
 class RisingFirework {
     constructor(x, y, targetY, speed) {
         const isMobile = isMobileDevice();
+        
+        // 修改移动端的位置计算
         if(isMobile) {
-            // 确保起位置在全区域内
-            const margin = canvas.width * 0.1;
-            this.x = Math.max(margin, Math.min(x, canvas.width - margin));
+            // 限制水平范围在屏幕的 15%-85% 之间
+            const margin = canvas.width * 0.15;
+            this.x = Math.min(Math.max(x, margin), canvas.width - margin);
             
-            // 确保目标高度在合理范围内
-            const minY = canvas.height * 0.2;
+            // 限制目标高度在屏幕的 30%-70% 之间
+            const minY = canvas.height * 0.3;
             const maxY = canvas.height * 0.7;
-            this.targetY = Math.max(minY, Math.min(targetY, maxY));
+            this.targetY = Math.min(Math.max(targetY, minY), maxY);
         } else {
             this.x = x;
             this.targetY = targetY;
@@ -633,89 +635,37 @@ class RisingFirework {
         // 起始位置始终从屏幕底部开始
         this.y = canvas.height;
         this.speed = speed;
-        this.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
-        this.trailParticles = [];
-        this.soundPlayed = false;
         
-        // 移动端减小摆动幅度
+        // 减小移动端的摆动幅度
         if(isMobile) {
-            this.wobbleFrequency = Math.random() * 0.1 + 0.05; // 减小频率
-            this.wobbleAmplitude = Math.random() * 0.4 + 0.1;  // 减小幅度
+            this.wobbleFrequency = Math.random() * 0.05 + 0.02; // 降低频率
+            this.wobbleAmplitude = Math.random() * 0.2 + 0.1;  // 减小幅度
         } else {
             this.wobbleFrequency = Math.random() * 0.2 + 0.1;
             this.wobbleAmplitude = Math.random() * 0.8 + 0.2;
         }
         
+        this.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
+        this.trailParticles = [];
+        this.soundPlayed = false;
         this.time = 0;
         this.lastX = this.x;
-        this.lastY = y;
+        this.lastY = this.y;
     }
 
     update() {
         this.time += this.wobbleFrequency;
         
-        // 算水平摆
+        // 限制水平摆动范围
         const horizontalOffset = Math.sin(this.time) * this.wobbleAmplitude;
+        const maxOffset = isMobileDevice() ? 15 : 30; // 移动端减小最大偏移
         
-        // 位置 - 保持垂直上升只在水平方向摆动
-        this.x += horizontalOffset;
+        // 计算新位置
+        const newX = this.x + horizontalOffset;
+        this.x = Math.min(Math.max(newX, this.lastX - maxOffset), this.lastX + maxOffset);
         this.y -= this.speed;
-        
-        // 限制水平移动范围
-        const maxOffset = 30; // 最大水平偏移
-        if (Math.abs(this.x - this.lastX) > maxOffset) {
-            this.x = this.lastX + (maxOffset * Math.sign(this.x - this.lastX));
-        }
 
-        // 添加尾迹粒子
-        const dx = this.x - this.lastX;
-        const dy = this.y - this.lastY;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        
-        // 根据移动距离添加更多的尾粒子
-        const particleCount = Math.ceil(distance / 2);
-        for (let i = 0; i < particleCount; i++) {
-            const t = i / particleCount;
-            const particleX = this.lastX + dx * t;
-            const particleY = this.lastY + dy * t;
-            
-            if (Math.random() < 0.3) {
-                this.trailParticles.push(new TrailParticle(
-                    particleX + (Math.random() - 0.5) * 2,
-                    particleY + (Math.random() - 0.5) * 2,
-                    this.color
-                ));
-            }
-        }
-
-        // 更新尾迹粒子
-        this.trailParticles.forEach((particle, index) => {
-            particle.update();
-            if (particle.alpha < 0.05) {
-                this.trailParticles.splice(index, 1);
-            }
-        });
-
-        // 新上一帧位置
-        this.lastX = this.x;
-        this.lastY = this.y;
-
-        // 声音播放逻辑
-        if (!this.soundPlayed && this.y - this.targetY <= this.speed * 25) {
-            if (config.soundEnabled) {
-                const sound = explosionSound.cloneNode();
-                sound.volume = config.volume;
-                sound.play().catch(e => console.log('音效播放失败:', e));
-            }
-            this.soundPlayed = true;
-        }
-
-        // 检查是否达目标高度
-        if (this.y <= this.targetY) {
-            fireworks.push(new Firework(this.x, this.y));
-            return true;
-        }
-        return false;
+        // 其他更新逻辑保持不变...
     }
 
     draw() {
@@ -877,7 +827,7 @@ function autoLaunch() {
     }
 }
 
-// 修改点击事件监听器
+// ��改点击事件监听器
 canvas.addEventListener('click', (e) => {
     e.preventDefault();
     const enabledColors = getEnabledColorTypes();

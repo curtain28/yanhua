@@ -62,7 +62,7 @@ canvas {
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-radius: 12px;
-    padding: 12px;
+    padding: 15px;
     width: 260px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -389,3 +389,29 @@ canvas {
         height: 16px;
     }
 } 
+
+/* 修改移动端样式 */
+@media screen and (max-width: 1024px) {
+    .settings-panel {
+        width: auto;
+        max-width: none;
+        right: 10px;
+        top: 10px;
+    }
+
+    .settings-content {
+        width: 240px;
+        padding: 15px;
+        margin-top: 45px;
+    }
+
+    .settings-group {
+        padding: 12px;
+        margin-bottom: 12px;
+        width: auto;
+    }
+
+    .settings-group:last-child {
+        margin-bottom: 0;
+    }
+}
