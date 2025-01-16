@@ -415,4 +415,23 @@ canvas {
         align-items: center;
         gap: 5px;
     }
+}
+
+.gugugu {
+    display: block;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 12px;
+    padding: 10px 0 5px;
+    font-family: "Microsoft YaHei", sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.gugugu:hover {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: underline;
 } 
