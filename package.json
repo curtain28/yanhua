@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "gsap": "^3.12.5",
+    "ismobilejs": "^1.1.1",
+    "pixi.js": "^8.6.5"
+  }
+}
